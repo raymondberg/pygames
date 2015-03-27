@@ -4,7 +4,7 @@ import os, sys
 import pygame
 from pygame.locals import *
 import random
-
+import math
 if not pygame.font: print 'Warning: fonts disabled'
 if not pygame.mixer: print 'Warning: sound disabled'
 
@@ -30,7 +30,7 @@ class PyMookMain:
     """Main Class, initializes the game"""
     COLOR_WHITE = ((250, 250, 250))
     COLOR_BLACK = ((0, 0, 0))
-    MAX_SCORE = 1000
+    MAX_SCORE = 1
 
     def __init__(self, width=640,height=480):
         pygame.init()
@@ -41,10 +41,10 @@ class PyMookMain:
         self.background = pygame.Surface(self.screen.get_size())
         self.background = self.background.convert()
         self.background.fill(PyMookMain.COLOR_BLACK)
-        self.level = 1
+        self.level = 999
         self.total_pellets = 0
 
-    def MainLoop(self):
+    def run(self):
         self.loadSprites()
 
         while True:
@@ -75,7 +75,7 @@ class PyMookMain:
                 self.level = min(PyMookMain.MAX_SCORE,self.level + 15)
                 self.updateScores()
             if len(self.pellet_sprites.sprites()) > 0:
-                lstCols = pygame.sprite.groupcollide(self.mook_sprites,self.dart_sprites,True,False)
+                lstCols = pygame.sprite.groupcollide(self.mook_sprites,self.dart_sprites,True,True)
                 if len(lstCols) > 0:
                     self.loadMook()
                     self.level = max(0,self.level-20)
@@ -98,7 +98,7 @@ class PyMookMain:
     def rollForDart(self):
         if random.randint(0,PyMookMain.MAX_SCORE) < self.level:
             #TODO: Make sure darts don't spawn next to player
-            self.dart_sprites.add(Dart(self.width,self.height))
+            self.dart_sprites.add(Dart(self.width,self.height,self.mook.rect))
 
     def loadSprites(self):
         self.loadMook()
@@ -121,9 +121,9 @@ class PyMookMain:
         self.mook_sprites = pygame.sprite.RenderPlain((self.mook))
 
 class Mook(BergSprite):
-    x_dist = 10
-    y_dist = 10
-
+    X_DIST = 10
+    Y_DIST = 10
+    SAFE_DISTANCE = 175
     def __init__(self,maxX,maxY):
         BergSprite.__init__(self)
         self.maxX = maxX
@@ -138,10 +138,10 @@ class Mook(BergSprite):
         self.yMove = 0
 
     def startmove(self,key):
-        if   (key == K_RIGHT): self.xMove = Mook.x_dist
-        elif (key == K_LEFT): self.xMove = -Mook.x_dist
-        elif (key == K_DOWN): self.yMove = Mook.y_dist
-        elif (key == K_UP): self.yMove = -Mook.y_dist
+        if   (key == K_RIGHT): self.xMove = Mook.X_DIST
+        elif (key == K_LEFT): self.xMove = -Mook.X_DIST
+        elif (key == K_DOWN): self.yMove = Mook.Y_DIST
+        elif (key == K_UP): self.yMove = -Mook.Y_DIST
 
     def stopmove(self,key):
         if   (key == K_RIGHT): self.xMove = 0
@@ -175,22 +175,27 @@ class Pellet(BergSprite):
         if rect != None:
             self.rect = rect
 
+def distance(tuple1,tuple2):
+    return math.sqrt(math.pow(tuple1[0]-tuple2[0],2) + math.pow(tuple1[1]-tuple2[1],2))
+
 class Dart(BergSprite):
-    def __init__(self,maxX,maxY,rect=None):
+    MAX_SPEED = 3
+    def __init__(self,maxX,maxY,mookRect=None):
         BergSprite.__init__(self)
         self.maxX = maxX
         self.maxY = maxY
         self.image, self.rect = self.load_image('dart.png',-1)
-        if rect != None:
-            self.rect = rect
-        else:
+
+        while True:
             x = random.randint(0,maxX-self.rect.width)
             y = random.randint(0,maxY-self.rect.height)
-            #print "Generating dart %d, %d" % (x,y)
             self.rect = pygame.Rect(x,y,10,10)
+            if mookRect != None and distance(mookRect,self.rect) < Mook.SAFE_DISTANCE:
+                continue
+            break
         while True:
-            self.xMove = random.randint(-5,5)
-            self.yMove = random.randint(-5,5)
+            self.xMove = random.randint(-Dart.MAX_SPEED,Dart.MAX_SPEED)
+            self.yMove = random.randint(-Dart.MAX_SPEED,Dart.MAX_SPEED)
             if self.xMove != 0 or self.yMove != 0: break
     def update(self):
         if self.xMove != 0 or self.yMove != 0:
@@ -207,4 +212,4 @@ class Dart(BergSprite):
                 self.getRightX() > self.maxX
 if __name__ == "__main__":
     MainWindow = PyMookMain()
-    MainWindow.MainLoop()
+    MainWindow.run()
