@@ -30,7 +30,7 @@ class PyMookMain:
     """Main Class, initializes the game"""
     COLOR_WHITE = ((250, 250, 250))
     COLOR_BLACK = ((0, 0, 0))
-    MAX_SCORE = 1
+    MAX_SCORE = 1000
 
     def __init__(self, width=640,height=480):
         pygame.init()
@@ -41,7 +41,7 @@ class PyMookMain:
         self.background = pygame.Surface(self.screen.get_size())
         self.background = self.background.convert()
         self.background.fill(PyMookMain.COLOR_BLACK)
-        self.level = 999
+        self.level = 0
         self.total_pellets = 0
 
     def run(self):
