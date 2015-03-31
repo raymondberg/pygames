@@ -10,7 +10,7 @@ You'll need pygame installed before going. Try these links:
 Several "games are included" and each runs from a single .py file with corresponding "images/" folder for sprites. 
 
 <h4>Sines</h4>
-Just a goofy sprite creator. Here's a video: <iframe width="420" height="315" src="https://www.youtube.com/embed/Wopx-dekZKk" frameborder="0" allowfullscreen></iframe>
+Just a goofy sprite creator. Here's a video: https://www.youtube.com/watch?v=Wopx-dekZKk
 
 <h4>Mooker</h4>
 Free form pellet collection, dodge the bullets! You can't win. 
