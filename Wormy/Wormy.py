@@ -34,8 +34,9 @@ class WormyMain:
             #Screen update
             pygame.display.flip()
             pygame.time.delay(10)
+
     def addWorm(self, worm):
-        if len(self.worms) < self.MAX_ACTIVE_WORMS:
+        if worm is not None and len(self.worms) < self.MAX_ACTIVE_WORMS:
             self.worms.append(worm)
 
     def moveWorms(self):
@@ -57,7 +58,6 @@ class Wormy:
         self.mature_age = mature_age
         self.age = 0
         self.alive = True
-        self.forage()
 
     def forage(self):
         square = self.current_square()
@@ -108,12 +108,11 @@ class Wormy:
         for option in options:
             if self.finds_food(option):
                 return self.clone(option)
-        return Wormy(self.grid,self.current_square())
 
 class ColorWormy(Wormy):
     BLUE = ((50,50,200))
     BLACK = ((0,0,0))
-    WHITE = ((255,255,255))
+    WHITE = ((250,250,250))
     RED = ((200,50,50))
     GREEN = ((50,200,50))
     COLORS = [RED, GREEN, BLUE, WHITE, BLACK]
@@ -132,7 +131,7 @@ class ColorWormy(Wormy):
         return square.color != self.color()
 
     def clone(self,square):
-        worm =  ColorWormy(self.grid,square)
+        worm = ColorWormy(self.grid,square)
         worm.set_color(self.color())
         return worm
 
@@ -207,7 +206,6 @@ class Square:
     def activate(self):
         self.active = True
         self.set_color(self.COLOR_ACTIVE)
-
 
     def toggle(self):
         if self.active: self.deactivate()
