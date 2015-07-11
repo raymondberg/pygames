@@ -11,9 +11,6 @@ if not pygame.mixer: print 'Warning: sound disabled'
 
 class DocDrukMain:
     """Main Class, initializes the game"""
-    COLOR_WHITE = ((250, 250, 250))
-    COLOR_BLACK = ((0, 0, 0))
-
     def __init__(self, width=640,height=480):
         pygame.init()
         self.width = width
@@ -21,9 +18,7 @@ class DocDrukMain:
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.background = pygame.Surface(self.screen.get_size())
         self.background = self.background.convert()
-        self.background.fill(DocDrukMain.COLOR_WHITE)
-        self.level = 0
-        self.total_pellets = 0
+        self.background.fill(Color("white"))
 
     def run(self):
         self.loadSprites()
@@ -33,32 +28,31 @@ class DocDrukMain:
                 if event.type == pygame.QUIT:
                     sys.exit()
                 elif event.type == KEYDOWN:
-                    if event.key in [K_RIGHT, K_LEFT, K_UP]:#, K_DOWN]:
-                        self.waveMachine.startmove(event.key)
-                    if event.key == K_DOWN:
+                    if event.key in [K_RIGHT, K_LEFT, K_UP]:
+                        self.docdruk.startmove(event.key)
+                    if event.key == K_SPACE:
                         screenstop = not screenstop
                 elif event.type == KEYUP:
-                    if event.key in [K_RIGHT, K_LEFT, K_UP]:#, K_DOWN]:
-                        self.waveMachine.stopmove(event.key)
+                    if event.key in [K_RIGHT, K_LEFT, K_UP]:
+                        self.docdruk.stopmove(event.key)
             #Screen
             if screenstop: continue
             self.screen.blit(self.background, (0, 0))
-            self.waveMachine.update()
+            self.docdruk.update()
             self.wm_sprites.draw(self.screen)
             pygame.display.flip()
             pygame.time.delay(10)
 
     def loadSprites(self):
-        self.loadWaveMachine()
-        self.ripple_sprites = pygame.sprite.Group()
+        self.loadDocDruk()
 
-    def loadWaveMachine(self):
+    def loadDocDruk(self):
         try:
-            self.waveMachine.kill()
+            self.docdruk.kill()
         except: pass
         #Snakes
-        self.waveMachine = WaveMachine(self.width,self.height)
-        self.wm_sprites = pygame.sprite.RenderPlain((self.waveMachine))
+        self.docdruk = DocDruk(self.width,self.height)
+        self.wm_sprites = pygame.sprite.RenderPlain((self.docdruk))
 
 
 
@@ -120,19 +114,14 @@ class BergGravSprite(BergSprite):
 
     def move(self,x,y):
         mytime = time.time()
-        #print "%f > %f + %d" % ( mytime, self.last_update, self.UPDATE_CYCLE)
         if self.in_air:
             self.yMove = min(BergGravSprite.GRAVITY_RATE_PIXELS_PSPS+self.yMove,self.TERMINAL_VELOCITY)
         if self.rect.x == x and self.rect.y == y: return
-        #if mytime > self.last_update + self.UPDATE_CYCLE:
         localx = x - self.rect.x
         localy = y - self.rect.y
         self.rect.move_ip(localx, localy)
-        #self.last_update = time.time()
         if self.in_air:
-            #print "Speed starting at %d" % self.yMove
             self.yMove = min(BergGravSprite.GRAVITY_RATE_PIXELS_PSPS+self.yMove,self.TERMINAL_VELOCITY)
-            #print "Speed ending at %d" % self.yMove
 
         def update(self):
             '''
@@ -143,7 +132,7 @@ class BergGravSprite(BergSprite):
             self.move(x,y)
 
 
-class WaveMachine(BergGravSprite):
+class DocDruk(BergGravSprite):
     X_DIST = 3
     Y_DIST = 15
     SAFE_DISTANCE = 175
@@ -152,23 +141,19 @@ class WaveMachine(BergGravSprite):
         self.maxX = maxX
         self.maxY = maxY
         self.load_image('snake_right.png',-1)
-        self.pellets = 0
         self.xMove = 0
         self.yMove = 0
 
     def startmove(self,key):
-        if (key == K_RIGHT): self.xMove = WaveMachine.X_DIST
-        elif (key == K_LEFT): self.xMove = -WaveMachine.X_DIST
+        if (key == K_RIGHT): self.xMove = DocDruk.X_DIST
+        elif (key == K_LEFT): self.xMove = -DocDruk.X_DIST
         elif (key == K_UP):
-            self.yMove = -WaveMachine.Y_DIST
+            self.yMove = -DocDruk.Y_DIST
             self.in_air = True
-        #elif (key == K_DOWN): self.yMove = WaveMachine.Y_DIST
 
     def stopmove(self,key):
         if   (key == K_RIGHT): self.xMove = 0
         elif (key == K_LEFT): self.xMove = 0
-        #elif (key == K_DOWN): self.yMove = 0
-        #elif (key == K_UP): self.yMove = 0
 
     def update(self):
         x,y = self.planMovement()
