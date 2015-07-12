@@ -12,6 +12,7 @@ class WormyMain:
     """Main Class, initializes the game"""
     DEFAULT_SQUARE_SIZE = 2
     MAX_ACTIVE_WORMS = 400
+    COLOR_SQUARE_SIZE = 10
 
     def __init__(self, width=640,height=480,square_size=DEFAULT_SQUARE_SIZE):
         pygame.init()
@@ -20,20 +21,55 @@ class WormyMain:
             raise Exception("Screen Width/Height must be evenly divisible by square size")
         self.screen = pygame.display.set_mode((width, height))
         self.grid = Grid(self.screen, width, height,square_size)
+
+        self.color_square_rect = (width-WormyMain.COLOR_SQUARE_SIZE, 0, WormyMain.COLOR_SQUARE_SIZE, WormyMain.COLOR_SQUARE_SIZE)
+        self.color_wheel = ColorWormy.COLORS + ["random"]
+        self.current_color_index = 0
+
         self.worms = []
+
+    def color_is_random(self):
+        return self.color_wheel[self.current_color_index] == "random"
+
+    def draw_color_square(self):
+        if self.color_is_random():
+            loc = self.color_square_rect
+            pygame.draw.rect(self.screen, Color("white"), loc)
+            pygame.draw.line(self.screen,
+                Color("red"),
+                (loc[0], loc[1]),
+                (loc[0] + WormyMain.COLOR_SQUARE_SIZE,
+                    loc[1] + WormyMain.COLOR_SQUARE_SIZE))
+        else:
+            pygame.draw.rect(self.screen, self.current_color(), self.color_square_rect)
+
+    def current_color(self):
+        if self.color_is_random():
+            return random.choice(ColorWormy.COLORS)
+        return self.color_wheel[self.current_color_index]
 
     def run(self):
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
+                elif event.type == KEYDOWN:
+                    if event.key == K_RIGHT:
+                        self.current_color_index = (self.current_color_index + 1) % len(self.color_wheel)
+                    if event.key == K_LEFT:
+                        self.current_color_index = (self.current_color_index - 1) % len(self.color_wheel)
+                    if event.key == K_n: 
+                        self.worms = []
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     square = self.grid.square_from_position(pygame.mouse.get_pos())
-                    self.addWorm(ColorWormy(self.grid,square))
+                    wormy = ColorWormy(self.grid,square)
+                    wormy.set_color(self.current_color())
+                    self.addWorm(wormy)
             self.moveWorms()
+            self.draw_color_square()
             #Screen update
             pygame.display.flip()
-            pygame.time.delay(10)
+            pygame.time.delay(1000)
 
     def addWorm(self, worm):
         if worm is not None and len(self.worms) < self.MAX_ACTIVE_WORMS:
@@ -51,7 +87,7 @@ class WormyMain:
             else: self.worms.pop(index)
 
 class Wormy:
-    def __init__(self, grid, square, mature_age=5):
+    def __init__(self, grid, square, mature_age=10):
         self.grid = grid
         self.x = square.x
         self.y = square.y
