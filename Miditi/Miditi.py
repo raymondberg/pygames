@@ -63,7 +63,7 @@ class MiditiMain:
         music_note = self.key_mappings.get(key,"C")
         keyboard_modifiers = pygame.key.get_mods()
         music_note_modifier = ""
-        if keyboard_modifiers % pygame.KMOD_SHIFT: note_modifier = "S"
+        if keyboard_modifiers & pygame.KMOD_SHIFT: music_note_modifier = "S"
         music_key_modifier = "M"
         if keyboard_modifiers & pygame.KMOD_CTRL: music_key_modifier = "m"
         return "%s%s%s" % (music_note,music_note_modifier,music_key_modifier)
@@ -218,9 +218,22 @@ class NoteRanges:
             "FSM": NoteRanges.FS,
             "GM": NoteRanges.G,
             "GSM": NoteRanges.GS,
+            "Am": NoteRanges.Am,
+            "ASm": NoteRanges.ASm,
+            "Bm": NoteRanges.Bm,
+            "BSm": NoteRanges.Cm,
+            "Cm": NoteRanges.Cm,
+            "CSm": NoteRanges.CSm,
+            "Dm": NoteRanges.Dm,
+            "DSm": NoteRanges.DSm,
+            "Em": NoteRanges.Em,
+            "ESm": NoteRanges.Fm,
+            "Fm": NoteRanges.Fm,
+            "FSm": NoteRanges.FSm,
+            "Gm": NoteRanges.Gm,
+            "GSm": NoteRanges.GSm,
         }
         return picker.get(key, NoteRanges.C)
-
 NoteRanges.C = filter(lambda x: x % 12 in [0,4,7], range(0,MidiAction.MAX_NOTE))
 NoteRanges.CS = map(lambda x: x + 1, NoteRanges.C)
 NoteRanges.D = map(lambda x: x + 2, NoteRanges.C)
@@ -233,6 +246,19 @@ NoteRanges.GS = map(lambda x: x + 8, NoteRanges.C)
 NoteRanges.A = map(lambda x: x + 9, NoteRanges.C)
 NoteRanges.AS = map(lambda x: x + 10, NoteRanges.C)
 NoteRanges.B = map(lambda x: x + 11, NoteRanges.C)
+NoteRanges.Cm = filter(lambda x: x % 12 in [0,3,7], range(0,MidiAction.MAX_NOTE))
+NoteRanges.CSm = map(lambda x: x + 1, NoteRanges.Cm)
+NoteRanges.Dm = map(lambda x: x + 2, NoteRanges.Cm)
+NoteRanges.DSm = map(lambda x: x + 3, NoteRanges.Cm)
+NoteRanges.Em = map(lambda x: x + 4, NoteRanges.Cm)
+NoteRanges.Fm = map(lambda x: x + 5, NoteRanges.Cm)
+NoteRanges.FSm = map(lambda x: x + 6, NoteRanges.Cm)
+NoteRanges.Gm = map(lambda x: x + 7, NoteRanges.Cm)
+NoteRanges.GSm = map(lambda x: x + 8, NoteRanges.Cm)
+NoteRanges.Am = map(lambda x: x + 9, NoteRanges.Cm)
+NoteRanges.ASm = map(lambda x: x + 10, NoteRanges.Cm)
+NoteRanges.Bm = map(lambda x: x + 11, NoteRanges.Cm)
+
 
 class MidiFaker:
     VELOCITY_DELTA_MAX = 5
