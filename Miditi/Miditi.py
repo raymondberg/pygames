@@ -25,6 +25,15 @@ class MiditiMain:
         self.instrument = MidiMachine(self.screen,self.width,self.height)
 
     def run(self):
+        key_mappings = {
+            K_a: "A",
+            K_b: "B",
+            K_c: "C",
+            K_d: "D",
+            K_e: "E",
+            K_f: "F",
+            K_g: "G",
+        }
         while True:
             self.instrument.process()
             for event in pygame.event.get():
@@ -33,12 +42,16 @@ class MiditiMain:
                 elif event.type == KEYDOWN:
                     if event.key in [K_q]:
                         sys.exit()
+                    if event.key in key_mappings:
+                           self.instrument.change_tone(key_mappings.get(event.key,"C"))
             #Screen
             pygame.display.flip()
             pygame.time.delay(10)
 
 class MidiMachine:
     MAX_READ_LENGTH = 1024
+    STANDARD = 'standard'
+    FAKE = 'fake'
    
     def __init__(self,screen,width,height):
         self.screen = screen
@@ -56,8 +69,7 @@ class MidiMachine:
         note_names = ['A','Bb','B','C','Db','D','Eb','E','F','Gb','G','Ab']
         while index <= MidiAction.MAX_NOTE:
             for note_name in note_names:
-                #print("Generating %s%d" % (note_name,octave))
-                self.tones.append(tone.GenerateTone('%s%d'%(note_name,octave),1.0,'sine',False,1.0/14.0))
+                self.tones.append(tone.GenerateTone('%s%d'%(note_name,octave),0.5,'sine',False,1.0/14.0))
                 index += 1
             octave = octave + 1
         print "Fully configured %d tones" % len(self.tones)
@@ -67,7 +79,6 @@ class MidiMachine:
         if device_count > 0: 
             choice=None
             for midi_id in range(0,device_count):
-                print pygame.midi.get_device_info(midi_id)[1]
                 if auto_pick == pygame.midi.get_device_info(midi_id)[1]: 
                     choice = midi_id
                     break
@@ -78,8 +89,10 @@ class MidiMachine:
                     print "\t%d: %s" % (midi_id, pygame.midi.get_device_info(midi_id))
                     choice = raw_input("Which do you want to use? (%s) " % ','.join(str(x) for x in range(0,device_count)))
             self.change_device(int(choice))
+            self.midi_mode = MidiMachine.STANDARD
         else:
             self.midi = MidiFaker(.99)
+            self.midi_mode = MidiMachine.FAKE
 
     def change_device(self, device_index):
         try: self.midi = pygame.midi.Input(device_index) 
@@ -113,6 +126,10 @@ class MidiMachine:
     def draw_instruments(self):
         for note_key, note_action in self.notes:
             pygame.draw.rect(self.screen,color,note_action.to_rect(self.width,self.height))
+
+    def change_tone(self,key):
+           if self.midi_mode == MidiMachine.FAKE:
+                self.midi.change_tone(key)
 
 class MidiAction:
     PITCH_BEND = 244
@@ -163,18 +180,42 @@ class MidiAction:
     def from_array(array):
         return MidiAction(array[0],array[1],array[2],array[3])
 
+class NoteRanges:
+    pass
+
+NoteRanges.C = filter(lambda x: x % 12 in [0,4,7], range(0,MidiAction.MAX_NOTE))
+NoteRanges.CS = map(lambda x: x + 1, NoteRanges.C)
+NoteRanges.D = map(lambda x: x + 2, NoteRanges.C)
+NoteRanges.DS = map(lambda x: x + 3, NoteRanges.C)
+NoteRanges.E = map(lambda x: x + 4, NoteRanges.C)
+NoteRanges.F = map(lambda x: x + 5, NoteRanges.C)
+NoteRanges.FS = map(lambda x: x + 6, NoteRanges.C)
+NoteRanges.G = map(lambda x: x + 7, NoteRanges.C)
+NoteRanges.GS = map(lambda x: x + 8, NoteRanges.C)
+NoteRanges.A = map(lambda x: x + 9, NoteRanges.C)
+NoteRanges.AS = map(lambda x: x + 10, NoteRanges.C)
+NoteRanges.B = map(lambda x: x + 11, NoteRanges.C)
+
 class MidiFaker:
     VELOCITY_DELTA_MAX = 5
+
     def __init__(self,frequency=.08):
         self.frequency = frequency
         self.last_velocity = random.randint(0,MidiAction.MAX_VELOCITY)
         self.notes = {}
+        self.set_note_options(NoteRanges.C)
+        self.in_transition = True
+
     def poll(self):
         if random.random() < self.frequency: return True
         else: return False
 
+    def set_note_options(self,note_options):
+        self.note_options = note_options
+    
     def read(self,unused_read_length=0):
         note = self.random_note()
+        print note
         velocity = 0
         if note in self.notes:
             self.notes.pop(note)
@@ -187,9 +228,25 @@ class MidiFaker:
         delta = random.randint(-1*MidiFaker.VELOCITY_DELTA_MAX,MidiFaker.VELOCITY_DELTA_MAX)
         self.last_velocity = min(max(1,self.last_velocity+delta), MidiAction.MAX_VELOCITY)
         return self.last_velocity
+
+    def change_tone(self,key):
+        picker = {
+            "A": NoteRanges.A,
+            "B": NoteRanges.B,
+            "C": NoteRanges.C,
+            "D": NoteRanges.D,
+            "E": NoteRanges.E,
+            "F": NoteRanges.F,
+            "G": NoteRanges.G,
+        }
+        self.set_note_options(picker.get(key,NoteRanges.C))
+        self.in_transition = True
     
     def random_note(self):
-        return random.randint(0,MidiAction.MAX_NOTE)
+        if self.in_transition:
+            if len(self.notes.keys()) > 0: return random.choice(self.notes.keys())
+            self.in_transition = False
+        return random.choice(self.note_options)
          
 if __name__ == "__main__":
     MainWindow = MiditiMain()
