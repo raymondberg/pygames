@@ -23,9 +23,7 @@ class MiditiMain:
         self.background.fill(Color("white"))
 
         self.instrument = MidiMachine(self.screen,self.width,self.height)
-
-    def run(self):
-        key_mappings = {
+        self.key_mappings = {
             K_a: "A",
             K_b: "B",
             K_c: "C",
@@ -34,19 +32,41 @@ class MiditiMain:
             K_f: "F",
             K_g: "G",
         }
+        self.silenced = False
+
+    def run(self):
         while True:
-            self.instrument.process()
+            if not self.silenced: self.instrument.process()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
                 elif event.type == KEYDOWN:
                     if event.key in [K_q]:
                         sys.exit()
-                    if event.key in key_mappings:
-                           self.instrument.change_tone(key_mappings.get(event.key,"C"))
+                    if event.key == K_SPACE:
+                        self.toggle_pause()
+                    if event.key in self.key_mappings:
+                           self.instrument.change_tone(self.key_combo_to_key_signature(event.key))
             #Screen
             pygame.display.flip()
             pygame.time.delay(10)
+    def toggle_pause(self):
+        if self.silenced:
+            print "Unpausing"
+            pygame.mixer.unpause()
+        else:
+            print "Pausing"
+            pygame.mixer.stop()
+        self.silenced = not self.silenced
+
+    def key_combo_to_key_signature(self, key):
+        music_note = self.key_mappings.get(key,"C")
+        keyboard_modifiers = pygame.key.get_mods()
+        music_note_modifier = ""
+        if keyboard_modifiers % pygame.KMOD_SHIFT: note_modifier = "S"
+        music_key_modifier = "M"
+        if keyboard_modifiers & pygame.KMOD_CTRL: music_key_modifier = "m"
+        return "%s%s%s" % (music_note,music_note_modifier,music_key_modifier)
 
 class MidiMachine:
     MAX_READ_LENGTH = 1024
@@ -181,7 +201,25 @@ class MidiAction:
         return MidiAction(array[0],array[1],array[2],array[3])
 
 class NoteRanges:
-    pass
+    @staticmethod
+    def notes_from_key(key):
+        picker = {
+            "AM": NoteRanges.A,
+            "ASM": NoteRanges.AS,
+            "BM": NoteRanges.B,
+            "BSM": NoteRanges.C,
+            "CM": NoteRanges.C,
+            "CSM": NoteRanges.CS,
+            "DM": NoteRanges.D,
+            "DSM": NoteRanges.DS,
+            "EM": NoteRanges.E,
+            "ESM": NoteRanges.F,
+            "FM": NoteRanges.F,
+            "FSM": NoteRanges.FS,
+            "GM": NoteRanges.G,
+            "GSM": NoteRanges.GS,
+        }
+        return picker.get(key, NoteRanges.C)
 
 NoteRanges.C = filter(lambda x: x % 12 in [0,4,7], range(0,MidiAction.MAX_NOTE))
 NoteRanges.CS = map(lambda x: x + 1, NoteRanges.C)
@@ -215,7 +253,6 @@ class MidiFaker:
     
     def read(self,unused_read_length=0):
         note = self.random_note()
-        print note
         velocity = 0
         if note in self.notes:
             self.notes.pop(note)
@@ -230,16 +267,8 @@ class MidiFaker:
         return self.last_velocity
 
     def change_tone(self,key):
-        picker = {
-            "A": NoteRanges.A,
-            "B": NoteRanges.B,
-            "C": NoteRanges.C,
-            "D": NoteRanges.D,
-            "E": NoteRanges.E,
-            "F": NoteRanges.F,
-            "G": NoteRanges.G,
-        }
-        self.set_note_options(picker.get(key,NoteRanges.C))
+        print key
+        self.set_note_options(NoteRanges.notes_from_key(key))
         self.in_transition = True
     
     def random_note(self):
