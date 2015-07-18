@@ -9,8 +9,6 @@ import tone
 if not pygame.font: print 'Warning: fonts disabled'
 if not pygame.mixer: print 'Warning: sound disabled'
 
-
-
 class MiditiMain:
     """Main Class, initializes the game"""
     def __init__(self):
@@ -37,7 +35,7 @@ class MiditiMain:
                         sys.exit()
             #Screen
             pygame.display.flip()
-            #pygame.time.delay(10)
+            pygame.time.delay(10)
 
 class MidiMachine:
     MAX_READ_LENGTH = 1024
@@ -64,13 +62,21 @@ class MidiMachine:
             octave = octave + 1
         print "Fully configured %d tones" % len(self.tones)
 
-    def _setup_device(self):
+    def _setup_device(self, auto_pick="USB Axiom 61 Port 1"):
         device_count = pygame.midi.get_count()
         if device_count > 0: 
-            print "Please choose one of the following:"
+            choice=None
             for midi_id in range(0,device_count):
-                print "\t%d: %s" % (midi_id, pygame.midi.get_device_info(midi_id))
-            choice = raw_input("Which do you want to use? (%s) " % ','.join(str(x) for x in range(0,device_count)))
+                print pygame.midi.get_device_info(midi_id)[1]
+                if auto_pick == pygame.midi.get_device_info(midi_id)[1]: 
+                    choice = midi_id
+                    break
+            if choice is None:
+                print "Please choose one of the following:"
+                for midi_id in range(0,device_count):
+                    pygame.midi.get_device_info(midi_id)
+                    print "\t%d: %s" % (midi_id, pygame.midi.get_device_info(midi_id))
+                    choice = raw_input("Which do you want to use? (%s) " % ','.join(str(x) for x in range(0,device_count)))
             self.change_device(int(choice))
         else:
             self.midi = MidiFaker(.99)
@@ -90,20 +96,22 @@ class MidiMachine:
             else: self.deactivate_note(action)
 
     def activate_note(self, note):
-        #print("Activating %d" % note.target)
-        self.notes[note.target] = note.to_rect(self.width,self.height)
-        self.tones[note.target].play()
-        pygame.draw.rect(self.screen, Color("white"), self.notes[note.target])
+        if note.is_valid():
+            self.notes[note.target] = note.to_rect(self.width,self.height)
+            self.tones[note.target].stop()
+            self.tones[note.target].play(loops=-1)
+            pygame.draw.rect(self.screen, Color("white"), self.notes[note.target])
 
     def deactivate_note(self,note):
-        if note.target in self.notes:
-            #print("Deactivating %d" % note.target)
-            rect = self.notes.pop(note.target)
-            pygame.draw.rect(self.screen, Color("black"), rect)
-        else: raise Exception("Tried to deactivate inactive note: %d-%s" % (note.target,str(note)))
+        if note.is_valid():
+            if note.target in self.notes:
+                rect = self.notes.pop(note.target)
+                self.tones[note.target].stop()
+                pygame.draw.rect(self.screen, Color("black"), rect)
+            else: raise Exception("Tried to deactivate inactive note: %d-%s" % (note.target,str(note)))
 
     def draw_instruments(self):
-        for note_key, note_action  in self.notes:
+        for note_key, note_action in self.notes:
             pygame.draw.rect(self.screen,color,note_action.to_rect(self.width,self.height))
 
 class MidiAction:
@@ -112,8 +120,9 @@ class MidiAction:
     NOTE_EFFECT = 208
     SLIDER_CHANGE = 176 
 
-    MAX_NOTE = 120
-    MAX_VELOCITY = 127 
+    MAX_NOTE = 80
+    MAX_VELOCITY = 127
+    MIN_NOTE = 30 
     STATUSES = [
         PITCH_BEND,
         NOTE_PLAY,
@@ -130,6 +139,8 @@ class MidiAction:
         return self.magnitude != 0
 
     def is_valid(self):
+        if self.status == MidiAction.NOTE_PLAY:
+            return self.target >= MidiAction.MIN_NOTE and self.target <= MidiAction.MAX_NOTE
         return self.status in MidiAction.STATUSES
 
     def is_type(self,type):
@@ -137,11 +148,14 @@ class MidiAction:
 
     def to_rect(self,width,height):
         if self.status == MidiAction.NOTE_PLAY:
+            left = (float(self.target-MidiAction.MIN_NOTE) / float(MidiAction.MAX_NOTE-MidiAction.MIN_NOTE))*width
+            top = height-(float(self.magnitude) / float(MidiAction.MAX_VELOCITY))*height 
+            width = width/(MidiAction.MAX_NOTE - MidiAction.MIN_NOTE)
             return (
-                (float(self.target) / float(MidiAction.MAX_NOTE))*width,
-                height-(float(self.magnitude) / float(MidiAction.MAX_VELOCITY))*height, 
-                10, 
-                10
+                left, 
+                top,
+                width, 
+                height-top
             )
         return (0,0,0,0)
 
