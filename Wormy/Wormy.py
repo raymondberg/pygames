@@ -69,7 +69,7 @@ class WormyMain:
             self.draw_color_square()
             #Screen update
             pygame.display.flip()
-            pygame.time.delay(1000)
+            pygame.time.delay(10)
 
     def addWorm(self, worm):
         if worm is not None and len(self.worms) < self.MAX_ACTIVE_WORMS:
