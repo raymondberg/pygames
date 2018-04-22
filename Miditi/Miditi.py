@@ -46,7 +46,8 @@ class MiditiMain:
                     if event.key == K_SPACE:
                         self.toggle_pause()
                     if event.key in self.key_mappings:
-                           self.instrument.change_tone(self.key_combo_to_key_signature(event.key))
+                        new_key = self.key_combo_to_key_signature(event.key)
+                        self.instrument.change_tone(new_key)
             #Screen
             pygame.display.flip()
             pygame.time.delay(10)
@@ -89,7 +90,12 @@ class MidiMachine:
         note_names = ['A','Bb','B','C','Db','D','Eb','E','F','Gb','G','Ab']
         while index <= MidiAction.MAX_NOTE:
             for note_name in note_names:
-                self.tones.append(tone.GenerateTone('%s%d'%(note_name,octave),0.5,'sine',False,1.0/14.0))
+                self.tones.append(
+                    tone.GenerateTone(
+                        freq='%s%d'%(note_name,octave),
+                        vol=0.5,
+                    )
+                )
                 index += 1
             octave = octave + 1
         print("Fully configured %d tones" % len(self.tones))
@@ -149,7 +155,7 @@ class MidiMachine:
 
     def change_tone(self,key):
            if self.midi_mode == MidiMachine.FAKE:
-                self.midi.change_tone(key)
+                self.midi.change_key(key)
 
 class MidiAction:
     PITCH_BEND = 244
@@ -234,48 +240,46 @@ class NoteRanges:
             "GSm": NoteRanges.GSm,
         }
         return picker.get(key, NoteRanges.C)
-NoteRanges.C = filter(lambda x: x % 12 in [0,4,7], range(0,MidiAction.MAX_NOTE))
-NoteRanges.CS = map(lambda x: x + 1, NoteRanges.C)
-NoteRanges.D = map(lambda x: x + 2, NoteRanges.C)
-NoteRanges.DS = map(lambda x: x + 3, NoteRanges.C)
-NoteRanges.E = map(lambda x: x + 4, NoteRanges.C)
-NoteRanges.F = map(lambda x: x + 5, NoteRanges.C)
-NoteRanges.FS = map(lambda x: x + 6, NoteRanges.C)
-NoteRanges.G = map(lambda x: x + 7, NoteRanges.C)
-NoteRanges.GS = map(lambda x: x + 8, NoteRanges.C)
-NoteRanges.A = map(lambda x: x + 9, NoteRanges.C)
-NoteRanges.AS = map(lambda x: x + 10, NoteRanges.C)
-NoteRanges.B = map(lambda x: x + 11, NoteRanges.C)
-NoteRanges.Cm = filter(lambda x: x % 12 in [0,3,7], range(0,MidiAction.MAX_NOTE))
-NoteRanges.CSm = map(lambda x: x + 1, NoteRanges.Cm)
-NoteRanges.Dm = map(lambda x: x + 2, NoteRanges.Cm)
-NoteRanges.DSm = map(lambda x: x + 3, NoteRanges.Cm)
-NoteRanges.Em = map(lambda x: x + 4, NoteRanges.Cm)
-NoteRanges.Fm = map(lambda x: x + 5, NoteRanges.Cm)
-NoteRanges.FSm = map(lambda x: x + 6, NoteRanges.Cm)
-NoteRanges.Gm = map(lambda x: x + 7, NoteRanges.Cm)
-NoteRanges.GSm = map(lambda x: x + 8, NoteRanges.Cm)
-NoteRanges.Am = map(lambda x: x + 9, NoteRanges.Cm)
-NoteRanges.ASm = map(lambda x: x + 10, NoteRanges.Cm)
-NoteRanges.Bm = map(lambda x: x + 11, NoteRanges.Cm)
+NoteRanges.C = [x for x in range(MidiAction.MIN_NOTE,MidiAction.MAX_NOTE) if x % 12 in [0,4,7]]
+NoteRanges.CS = [x + 1 for x in NoteRanges.C]
+NoteRanges.D = [x + 2 for x in NoteRanges.C]
+NoteRanges.DS = [x + 3 for x in NoteRanges.C]
+NoteRanges.E = [x + 4 for x in NoteRanges.C]
+NoteRanges.F = [x + 5 for x in NoteRanges.C]
+NoteRanges.FS = [x + 6 for x in NoteRanges.C]
+NoteRanges.G = [x + 7 for x in NoteRanges.C]
+NoteRanges.GS = [x + 8 for x in NoteRanges.C]
+NoteRanges.A = [x + 9 for x in NoteRanges.C]
+NoteRanges.AS = [x + 10 for x in NoteRanges.C]
+NoteRanges.B = [x + 11 for x in NoteRanges.C]
+NoteRanges.Cm = [x for x in range(MidiAction.MIN_NOTE,MidiAction.MAX_NOTE) if x % 12 in [0,3,7]]
+NoteRanges.CSm = [x + 1 for x in NoteRanges.Cm]
+NoteRanges.Dm = [x + 2 for x in NoteRanges.Cm]
+NoteRanges.DSm = [x + 3 for x in NoteRanges.Cm]
+NoteRanges.Em = [x + 4 for x in NoteRanges.Cm]
+NoteRanges.Fm = [x + 5 for x in NoteRanges.Cm]
+NoteRanges.FSm = [x + 6 for x in NoteRanges.Cm]
+NoteRanges.Gm = [x + 7 for x in NoteRanges.Cm]
+NoteRanges.GSm = [x + 8 for x in NoteRanges.Cm]
+NoteRanges.Am = [x + 9 for x in NoteRanges.Cm]
+NoteRanges.ASm = [x + 10 for x in NoteRanges.Cm]
+NoteRanges.Bm = [x + 11 for x in NoteRanges.Cm]
 
 
 class MidiFaker:
-    VELOCITY_DELTA_MAX = 5
+    VELOCITY_DELTA_MAX = 24
+    MAX_SIMULTANEOUS_NOTES = 4
 
-    def __init__(self,frequency=.08):
+    def __init__(self,starting_key="CM",frequency=.08):
         self.frequency = frequency
         self.last_velocity = random.randint(0,MidiAction.MAX_VELOCITY)
-        self.notes = {}
-        self.set_note_options(NoteRanges.C)
         self.in_transition = True
+        self.notes = {}
+        self.change_key(starting_key)
 
     def poll(self):
         if random.random() < self.frequency: return True
         else: return False
-
-    def set_note_options(self,note_options):
-        self.note_options = note_options
 
     def read(self,unused_read_length=0):
         note = self.random_note()
@@ -285,25 +289,27 @@ class MidiFaker:
         else:
             self.notes[note] = True
             velocity = self.random_velocity()
-        return [[[MidiAction.NOTE_PLAY,note,velocity,0]]]
+        return (((MidiAction.NOTE_PLAY,note,velocity,0),),)
 
     def random_velocity(self):
         delta = random.randint(-1*MidiFaker.VELOCITY_DELTA_MAX,MidiFaker.VELOCITY_DELTA_MAX)
         self.last_velocity = min(max(1,self.last_velocity+delta), MidiAction.MAX_VELOCITY)
         return self.last_velocity
 
-    def change_tone(self,key):
+    def change_key(self,key):
         print(key)
-        self.set_note_options(NoteRanges.notes_from_key(key))
+        self.note_options = NoteRanges.notes_from_key(key)
         self.in_transition = True
 
     def random_note(self):
-        if self.in_transition:
-            if len(self.notes.keys()) > 0: return random.choice(self.notes.keys())
+        if self.in_transition or len(self.notes) > self.MAX_SIMULTANEOUS_NOTES:
+            if len(self.notes) > 0:
+                notes = list(self.notes.keys())
+                return random.choice(notes)
             self.in_transition = False
         return random.choice(self.note_options)
 
+
 if __name__ == "__main__":
     MainWindow = MiditiMain()
-    tone.GenerateTone('C4').play()
     MainWindow.run()
