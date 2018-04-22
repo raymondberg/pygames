@@ -5,8 +5,8 @@ import pygame
 from pygame.locals import *
 import random
 import math
-if not pygame.font: print 'Warning: fonts disabled'
-if not pygame.mixer: print 'Warning: sound disabled'
+if not pygame.font: print('Warning: fonts disabled')
+if not pygame.mixer: print('Warning: sound disabled')
 
 class WormyMain:
     """Main Class, initializes the game"""
@@ -58,7 +58,7 @@ class WormyMain:
                         self.current_color_index = (self.current_color_index + 1) % len(self.color_wheel)
                     if event.key == K_LEFT:
                         self.current_color_index = (self.current_color_index - 1) % len(self.color_wheel)
-                    if event.key == K_n: 
+                    if event.key == K_n:
                         self.worms = []
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     square = self.grid.square_from_position(pygame.mouse.get_pos())

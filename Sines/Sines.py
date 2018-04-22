@@ -5,8 +5,8 @@ import pygame
 from pygame.locals import *
 import random
 import math
-if not pygame.font: print 'Warning: fonts disabled'
-if not pygame.mixer: print 'Warning: sound disabled'
+if not pygame.font: print('Warning: fonts disabled')
+if not pygame.mixer: print('Warning: sound disabled')
 
 
 class BergSprite(pygame.sprite.Sprite):
@@ -17,7 +17,7 @@ class BergSprite(pygame.sprite.Sprite):
         try:
             image = pygame.image.load(fullname)
         except pygame.error, message:
-            print 'Cannot load image: ', name
+            print('Cannot load image: ', name)
             raise SystemExit, message
         image = image.convert()
         if colorkey is not None:
@@ -65,7 +65,7 @@ class SineMain:
             self.ripple_sprites.update()
             self.wm_sprites.draw(self.screen)
             self.ripple_sprites.draw(self.screen)
-           # print len(self.ripple_sprites.sprites())
+           # print(len(self.ripple_sprites.sprites()))
             for sprite in self.ripple_sprites.sprites():
                 if sprite.offScreen():
                     sprite.kill()
@@ -145,17 +145,17 @@ class Ripple(BergSprite):
     def functionY(self,x):
         return int(20*math.sin(x/20.0))
     def functionRed(self,x):
-        #print "Red %d" %  ((-int(math.sin(x/20.0)*100)+155))
+        #print("Red %d" %  ((-int(math.sin(x/20.0)*100)+155)))
         return (-int(math.sin(x/20.0)*100)+155)
     def functionBlue(self,x):
-        #print "Blue %d" % (int(math.sin(x/20.0)*100)+155)
+        #print("Blue %d" % (int(math.sin(x/20.0)*100)+155))
         return (int(math.sin(x/20.0)*100)+155)
     def functionGreen(self,x):
         return 0
 
     def update(self):
         x = self.index
-        #print "drawing %d,%d  " % (x+self.startX,self.startY+self.functionY(x))
+        #print("drawing %d,%d  " % (x+self.startX,self.startY+self.functionY(x)))
         self.rects.append([
                 (self.functionRed(x),self.functionGreen(x),self.functionBlue(x)),
                 pygame.Rect(x+self.startX,self.startY+self.functionY(x),1,1)

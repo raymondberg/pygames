@@ -6,8 +6,8 @@ from pygame.locals import *
 import pygame.midi
 import random
 import tone
-if not pygame.font: print 'Warning: fonts disabled'
-if not pygame.mixer: print 'Warning: sound disabled'
+if not pygame.font: print('Warning: fonts disabled')
+if not pygame.mixer: print('Warning: sound disabled')
 
 class MiditiMain:
     """Main Class, initializes the game"""
@@ -52,10 +52,10 @@ class MiditiMain:
             pygame.time.delay(10)
     def toggle_pause(self):
         if self.silenced:
-            print "Unpausing"
+            print("Unpausing")
             pygame.mixer.unpause()
         else:
-            print "Pausing"
+            print("Pausing")
             pygame.mixer.stop()
         self.silenced = not self.silenced
 
@@ -72,7 +72,7 @@ class MidiMachine:
     MAX_READ_LENGTH = 1024
     STANDARD = 'standard'
     FAKE = 'fake'
-   
+
     def __init__(self,screen,width,height):
         self.screen = screen
         self.width = width
@@ -92,21 +92,21 @@ class MidiMachine:
                 self.tones.append(tone.GenerateTone('%s%d'%(note_name,octave),0.5,'sine',False,1.0/14.0))
                 index += 1
             octave = octave + 1
-        print "Fully configured %d tones" % len(self.tones)
+        print("Fully configured %d tones" % len(self.tones))
 
     def _setup_device(self, auto_pick="USB Axiom 61 Port 1"):
         device_count = pygame.midi.get_count()
-        if device_count > 0: 
+        if device_count > 0:
             choice=None
             for midi_id in range(0,device_count):
-                if auto_pick == pygame.midi.get_device_info(midi_id)[1]: 
+                if auto_pick == pygame.midi.get_device_info(midi_id)[1]:
                     choice = midi_id
                     break
             if choice is None:
-                print "Please choose one of the following:"
+                print("Please choose one of the following:")
                 for midi_id in range(0,device_count):
                     pygame.midi.get_device_info(midi_id)
-                    print "\t%d: %s" % (midi_id, pygame.midi.get_device_info(midi_id))
+                    print("\t%d: %s" % (midi_id, pygame.midi.get_device_info(midi_id)))
                     choice = raw_input("Which do you want to use? (%s) " % ','.join(str(x) for x in range(0,device_count)))
             self.change_device(int(choice))
             self.midi_mode = MidiMachine.STANDARD
@@ -115,7 +115,7 @@ class MidiMachine:
             self.midi_mode = MidiMachine.FAKE
 
     def change_device(self, device_index):
-        try: self.midi = pygame.midi.Input(device_index) 
+        try: self.midi = pygame.midi.Input(device_index)
         except: raise Exception("Unknown midi instrument choice: %s" % str(device_index))
 
     def process(self):
@@ -155,11 +155,11 @@ class MidiAction:
     PITCH_BEND = 244
     NOTE_PLAY = 144
     NOTE_EFFECT = 208
-    SLIDER_CHANGE = 176 
+    SLIDER_CHANGE = 176
 
     MAX_NOTE = 80
     MAX_VELOCITY = 127
-    MIN_NOTE = 30 
+    MIN_NOTE = 30
     STATUSES = [
         PITCH_BEND,
         NOTE_PLAY,
@@ -186,12 +186,12 @@ class MidiAction:
     def to_rect(self,width,height):
         if self.status == MidiAction.NOTE_PLAY:
             left = (float(self.target-MidiAction.MIN_NOTE) / float(MidiAction.MAX_NOTE-MidiAction.MIN_NOTE))*width
-            top = height-(float(self.magnitude) / float(MidiAction.MAX_VELOCITY))*height 
+            top = height-(float(self.magnitude) / float(MidiAction.MAX_VELOCITY))*height
             width = width/(MidiAction.MAX_NOTE - MidiAction.MIN_NOTE)
             return (
-                left, 
+                left,
                 top,
-                width, 
+                width,
                 height-top
             )
         return (0,0,0,0)
@@ -276,7 +276,7 @@ class MidiFaker:
 
     def set_note_options(self,note_options):
         self.note_options = note_options
-    
+
     def read(self,unused_read_length=0):
         note = self.random_note()
         velocity = 0
@@ -293,16 +293,16 @@ class MidiFaker:
         return self.last_velocity
 
     def change_tone(self,key):
-        print key
+        print(key)
         self.set_note_options(NoteRanges.notes_from_key(key))
         self.in_transition = True
-    
+
     def random_note(self):
         if self.in_transition:
             if len(self.notes.keys()) > 0: return random.choice(self.notes.keys())
             self.in_transition = False
         return random.choice(self.note_options)
-         
+
 if __name__ == "__main__":
     MainWindow = MiditiMain()
     tone.GenerateTone('C4').play()

@@ -7,8 +7,8 @@ __author__ = 'rberg'
 import os, sys
 import pygame
 from pygame.locals import *
-if not pygame.font: print 'Warning: fonts disabled'
-if not pygame.mixer: print 'Warning: sound disabled'
+if not pygame.font: print('Warning: fonts disabled')
+if not pygame.mixer: print('Warning: sound disabled')
 
 
 width = 600
@@ -72,7 +72,7 @@ while True:
     moves_left = False
     for choice_row in choices:
         for choice in choice_row:
-            if choice is None: 
+            if choice is None:
                 moves_left = True
     if moves_left:
         pygame.time.delay(50)

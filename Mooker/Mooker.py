@@ -5,8 +5,8 @@ import pygame
 from pygame.locals import *
 import random
 import math
-if not pygame.font: print 'Warning: fonts disabled'
-if not pygame.mixer: print 'Warning: sound disabled'
+if not pygame.font: print('Warning: fonts disabled')
+if not pygame.mixer: print('Warning: sound disabled')
 
 
 class BergSprite(pygame.sprite.Sprite):
@@ -17,7 +17,7 @@ class BergSprite(pygame.sprite.Sprite):
         try:
             image = pygame.image.load(fullname)
         except pygame.error, message:
-            print 'Cannot load image: ', name
+            print('Cannot load image: ', name)
             raise SystemExit, message
         image = image.convert()
         if colorkey is not None:
