@@ -180,8 +180,8 @@ class Grid:
         self.square_size = square_size
         self.width = width
         self.height = height
-        self.max_x = self.width / square_size
-        self.max_y = self.height / square_size
+        self.max_x = self.width // square_size
+        self.max_y = self.height // square_size
         self.squares = []
         #Set up squares
         for y in range(0,self.max_y):

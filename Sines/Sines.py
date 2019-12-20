@@ -16,9 +16,9 @@ class BergSprite(pygame.sprite.Sprite):
         fullname = os.path.join("images",name)
         try:
             image = pygame.image.load(fullname)
-        except pygame.error, message:
+        except pygame.error as message:
             print('Cannot load image: ', name)
-            raise SystemExit, message
+            raise SystemExit
         image = image.convert()
         if colorkey is not None:
             if colorkey is -1:
