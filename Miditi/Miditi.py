@@ -93,7 +93,7 @@ class MidiMachine:
                 self.tones.append(
                     tone.GenerateTone(
                         freq='%s%d'%(note_name,octave),
-                        vol=0.5,
+                        vol=0.01,
                     )
                 )
                 index += 1
@@ -102,7 +102,7 @@ class MidiMachine:
 
     def _setup_device(self, auto_pick="USB Axiom 61 Port 1"):
         device_count = pygame.midi.get_count()
-        if device_count > 0:
+        if device_count > 100:
             choice=None
             for midi_id in range(0,device_count):
                 if auto_pick == pygame.midi.get_device_info(midi_id)[1]:
@@ -113,7 +113,7 @@ class MidiMachine:
                 for midi_id in range(0,device_count):
                     pygame.midi.get_device_info(midi_id)
                     print("\t%d: %s" % (midi_id, pygame.midi.get_device_info(midi_id)))
-                    choice = raw_input("Which do you want to use? (%s) " % ','.join(str(x) for x in range(0,device_count)))
+                    choice = input("Which do you want to use? (%s) " % ','.join(str(x) for x in range(0,device_count)))
             self.change_device(int(choice))
             self.midi_mode = MidiMachine.STANDARD
         else:
@@ -164,7 +164,7 @@ class MidiAction:
     SLIDER_CHANGE = 176
 
     MAX_NOTE = 80
-    MAX_VELOCITY = 127
+    MAX_VELOCITY = 15
     MIN_NOTE = 30
     STATUSES = [
         PITCH_BEND,
